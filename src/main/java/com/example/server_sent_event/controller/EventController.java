@@ -7,7 +7,10 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -29,102 +32,59 @@ public class EventController {
     @GetMapping(value = "/stream-sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> streamSseEvents() {
         return Flux.interval(Duration.ofSeconds(1))
-            .take(10)
-            .map(sequence -> ServerSentEvent.<String>builder()
-                .id(String.valueOf(sequence))
-                .event("message")
-                .data("SSE WebFlux - " + System.currentTimeMillis())
-                .build());
+                .take(20)
+                .map(sequence -> ServerSentEvent.<String>builder()
+                        .id(String.valueOf(sequence))
+                        .event("message")
+                        .data("SSE WebFlux - " + System.currentTimeMillis())
+                        .build());
     }
 
     /**
-     * Subscribe to news updates via SSE
-     * This endpoint will send all existing news and then stream new news as they arrive
+     * Combined SSE endpoint that streams both news and subscriber count updates
+     * This reduces connections from 2 per tab to 1 per tab, avoiding browser connection limits (6 per domain)
      */
-    @GetMapping(value = "/news/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<News>> subscribeToNews() {
-        return newsService.getNewsStream()
-            .map(news -> {
-                try {
-                    return ServerSentEvent.<News>builder()
-                        .id(String.valueOf(news.getId()))
-                        .event("news")
-                        .data(news)
-                        .build();
-                } catch (Exception e) {
-                    log.error("Error creating SSE event for news: {}", e.getMessage(), e);
-                    throw new RuntimeException("Failed to create SSE event", e);
-                }
-            })
-            .concatWith(Flux.never())
-            .doOnSubscribe(subscription -> log.info("New subscriber connected to news stream"))
-            .doOnCancel(() -> log.info("Subscriber disconnected from news stream"))
-            .doOnError(error -> log.error("Error in SSE stream: {}", error.getMessage(), error))
-            .onErrorResume(error -> {
-                log.error("Fatal error in SSE stream: {}", error.getMessage(), error);
-                return Flux.empty();
-            });
+    @GetMapping(value = "/news/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ServerSentEvent<Object>> subscribeToCombinedStream() {
+        return newsService.getCombinedStream()
+                .map(update -> {
+                    if ("news".equals(update.getType())) {
+                        News news = (News) update.getData();
+                        return ServerSentEvent.<Object>builder()
+                                .id(String.valueOf(news.getId()))
+                                .event("news")
+                                .data(news)
+                                .build();
+                    } else {
+                        Integer count = (Integer) update.getData();
+                        return ServerSentEvent.<Object>builder()
+                                .id(String.valueOf(count))
+                                .event("count")
+                                .data(count)
+                                .build();
+                    }
+                })
+                .doOnSubscribe(subscription -> log.info("New subscriber connected to combined stream"))
+                .doOnCancel(() -> log.info("Subscriber disconnected from combined stream"))
+                .doOnError(error -> log.error("Error in combined stream: {}", error.getMessage(), error))
+                .onErrorResume(error -> {
+                    log.error("Fatal error in combined stream: {}", error.getMessage(), error);
+                    return Flux.empty();
+                });
     }
 
     /**
-     * Add new news (for testing/admin purposes)
+     * Add new news
      */
     @PostMapping("/news")
     public Mono<News> addNews(@RequestBody NewsRequest request) {
         News news = newsService.addNews(
-            request.getTitle(), 
-            request.getContent(), 
-            request.getCategory(), 
-            request.getAuthor()
+                request.getTitle(),
+                request.getContent(),
+                request.getCategory(),
+                request.getAuthor()
         );
         return Mono.just(news);
-    }
-
-    /**
-     * Get all news
-     */
-    @GetMapping("/news")
-    public Mono<java.util.List<News>> getAllNews() {
-        return Mono.just(newsService.getAllNews());
-    }
-
-    /**
-     * Get subscriber count (REST endpoint for backward compatibility)
-     */
-    @GetMapping("/news/subscribers/count")
-    public Mono<Integer> getSubscriberCount() {
-        return Mono.just(newsService.getSubscriberCount());
-    }
-
-    /**
-     * Subscribe to subscriber count updates via SSE
-     * Emits the current count immediately, then streams updates whenever the count changes
-     */
-    @GetMapping(value = "/news/subscribers/count/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<Integer>> subscribeToSubscriberCount() {
-        return newsService.getSubscriberCountStream()
-            .map(count -> ServerSentEvent.<Integer>builder()
-                .id(String.valueOf(count))
-                .event("count")
-                .data(count)
-                .build())
-            .doOnSubscribe(subscription -> log.info("New subscriber connected to count stream"))
-            .doOnCancel(() -> log.info("Subscriber disconnected from count stream"))
-            .doOnError(error -> log.error("Error in count stream: {}", error.getMessage(), error))
-            .onErrorResume(error -> {
-                log.error("Fatal error in count stream: {}", error.getMessage(), error);
-                return Flux.empty();
-            });
-    }
-
-    /**
-     * Remove a specific subscriber (for explicit disconnect)
-     * Note: In WebFlux, disconnection is handled automatically by the reactive stream
-     */
-    @PostMapping("/news/disconnect")
-    public Mono<String> disconnect() {
-        // In WebFlux, disconnection is handled automatically when the client closes the connection
-        return Mono.just("Disconnect request received. Connection will close automatically.");
     }
 
     /**

@@ -6,46 +6,71 @@
     <title>News Broadcasting - SSE Demo</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            max-width: 1200px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f5f5f5;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
         }
         .container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+            display: flex;
+            flex-direction: column;
             gap: 25px;
         }
         
         @media (max-width: 768px) {
-            .container {
-                grid-template-columns: 1fr;
+            body {
+                padding: 10px;
             }
         }
         
         .section {
             background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transition: box-shadow 0.3s ease;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
         }
         
         .section:hover {
-            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
         }
+        
         h1 {
-            color: #1a1a1a;
-            font-size: 2.2em;
-            margin-bottom: 10px;
+            color: white;
+            font-size: 2.5em;
+            margin-bottom: 30px;
             font-weight: 700;
+            text-align: center;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
         
         h2 {
             color: #333;
-            font-size: 1.5em;
+            font-size: 1.6em;
             font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #007bff;
+        }
+        
+        .form-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
         }
         .news-item {
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
@@ -163,80 +188,266 @@
         }
         input, textarea {
             width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
             box-sizing: border-box;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-family: inherit;
         }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+        
         textarea {
-            min-height: 100px;
+            min-height: 120px;
             resize: vertical;
         }
         button {
             background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
             color: white;
-            padding: 12px 24px;
+            padding: 12px 28px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0,123,255,0.3);
+            box-shadow: 0 4px 12px rgba(0,123,255,0.3);
         }
+        
         button:hover:not(:disabled) {
             background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,123,255,0.4);
+            box-shadow: 0 6px 16px rgba(0,123,255,0.4);
         }
+        
         button:active:not(:disabled) {
             transform: translateY(0);
         }
+        
         button:disabled {
             background: #ccc;
             cursor: not-allowed;
             box-shadow: none;
             transform: none;
         }
-        .status {
-            padding: 12px 16px;
-            margin: 15px 0;
-            border-radius: 8px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
+        
+        #disconnectBtn {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            box-shadow: 0 4px 12px rgba(220,53,69,0.3);
         }
         
+        #disconnectBtn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+            box-shadow: 0 6px 16px rgba(220,53,69,0.4);
+        }
         .status.connected {
             background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
             color: #155724;
-            border-left: 4px solid #28a745;
         }
         
         .status.connected::before {
             content: '✓';
-            font-size: 1.2em;
+            font-size: 1.1em;
             font-weight: bold;
         }
         
         .status.disconnected {
             background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
             color: #721c24;
-            border-left: 4px solid #dc3545;
         }
         
         .status.disconnected::before {
             content: '✗';
-            font-size: 1.2em;
+            font-size: 1.1em;
             font-weight: bold;
         }
+        .news-feed-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            min-height: calc(100vh - 200px);
+        }
+        
+        .feed-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .feed-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
         #news-container {
-            max-height: 600px;
+            max-height: calc(100vh - 250px);
             overflow-y: auto;
-            padding: 5px;
-            margin-top: 15px;
+            padding: 10px;
+            margin-top: 20px;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            margin: auto;
+            padding: 0;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideDown 0.3s ease;
+            position: relative;
+        }
+        
+        .modal-header {
+            padding: 25px 30px;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 16px 16px 0 0;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            color: white;
+            border: none;
+            padding: 0;
+            font-size: 1.8em;
+        }
+        
+        .close {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            background: rgba(255,255,255,0.2);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .close:hover,
+        .close:focus {
+            background: rgba(255,255,255,0.3);
+            transform: rotate(90deg);
+        }
+        
+        .modal-body {
+            padding: 30px;
+        }
+        
+        /* Floating Action Button */
+        .fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(0,123,255,0.4);
+            transition: all 0.3s ease;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .fab:hover {
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 12px 32px rgba(0,123,255,0.5);
+        }
+        
+        .fab:active {
+            transform: scale(0.95);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .fab {
+                bottom: 20px;
+                right: 20px;
+                width: 56px;
+                height: 56px;
+                font-size: 24px;
+            }
+            
+            .modal-content {
+                width: 95%;
+                max-height: 95vh;
+            }
+            
+            .modal-body {
+                padding: 20px;
+            }
         }
         
         /* Custom scrollbar for news container */
@@ -273,20 +484,26 @@
             opacity: 0.5;
         }
         .subscriber-count {
-            display: inline-block;
-            background-color: #007bff;
-            color: white;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            margin-left: 10px;
-            font-weight: bold;
-        }
-        .header-row {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            justify-content: space-between;
-            margin-bottom: 15px;
+            gap: 8px;
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 0.95em;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+        }
+        
+        .status {
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
         }
     </style>
 </head>
@@ -294,99 +511,103 @@
     <h1>📰 News Broadcasting - Server-Sent Events Demo</h1>
     
     <div class="container">
-        <div class="section">
-            <div class="header-row">
-                <h2 style="margin: 0;">Live News Feed</h2>
-                <span class="subscriber-count">
-                    👥 <span id="subscriberCount">0</span> subscribers
-                </span>
+        <!-- Live News Feed Section -->
+        <div class="section news-feed-section">
+            <div class="feed-header">
+                <h2 style="margin: 0; border: none; padding: 0;">📡 Live News Feed</h2>
+                <div class="feed-controls">
+                    <span class="subscriber-count">
+                        👥 <span id="subscriberCount">0</span> subscribers
+                    </span>
+                    <div id="status" class="status disconnected">Disconnected</div>
+                    <button id="disconnectBtn" onclick="disconnect()" disabled>Disconnect</button>
+                </div>
             </div>
-            <div id="status" class="status disconnected">Disconnected</div>
-            <button id="connectBtn" onclick="connect()">Connect to News Feed</button>
-            <button id="disconnectBtn" onclick="disconnect()" disabled>Disconnect</button>
             <div id="news-container"></div>
         </div>
-        
-        <div class="section">
-            <h2>Add New News</h2>
-            <form id="newsForm" onsubmit="addNews(event)">
-                <div class="form-group">
-                    <label for="title">Title:</label>
-                    <input type="text" id="title" required>
-                </div>
-                <div class="form-group">
-                    <label for="content">Content:</label>
-                    <textarea id="content" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="category">Category:</label>
-                    <input type="text" id="category" placeholder="e.g., Technology, Sports, Politics">
-                </div>
-                <div class="form-group">
-                    <label for="author">Author:</label>
-                    <input type="text" id="author" placeholder="e.g., John Doe">
-                </div>
-                <button type="submit">Publish News</button>
-            </form>
+    </div>
+    
+    <!-- Floating Action Button -->
+    <button class="fab" onclick="openModal()" title="Add New News">+</button>
+    
+    <!-- Modal -->
+    <div id="newsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✍️ Add New News</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="newsForm" onsubmit="addNews(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="title">Title *</label>
+                            <input type="text" id="title" required placeholder="Enter news title">
+                        </div>
+                        <div class="form-group">
+                            <label for="category">Category</label>
+                            <input type="text" id="category" placeholder="e.g., Technology, Sports, Politics">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="content">Content *</label>
+                        <textarea id="content" required placeholder="Write your news content here..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="author">Author</label>
+                        <input type="text" id="author" placeholder="e.g., John Doe">
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button type="submit" style="flex: 1;">🚀 Publish News</button>
+                        <button type="button" onclick="closeModal()" style="flex: 1; background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);">Cancel</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
     <script>
-        let eventSource = null;
-        let countEventSource = null;
+        let eventSource = null; // Single EventSource for both news and count
+
+        // Modal functions
+        function openModal() {
+            document.getElementById('newsModal').classList.add('show');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+        
+        function closeModal() {
+            document.getElementById('newsModal').classList.remove('show');
+            document.body.style.overflow = 'auto'; // Restore scrolling
+            // Reset form
+            document.getElementById('newsForm').reset();
+        }
+        
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('newsModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
 
         // Function to update subscriber count display
         function updateSubscriberCount(count) {
             document.getElementById('subscriberCount').textContent = count;
         }
 
-        // Connect to subscriber count SSE stream
-        function connectToCountStream() {
-            if (countEventSource) {
-                return; // Already connected
-            }
-
-            countEventSource = new EventSource('/news/subscribers/count/stream');
-            
-            countEventSource.addEventListener('count', function(event) {
-                try {
-                    const count = parseInt(event.data);
-                    updateSubscriberCount(count);
-                } catch (error) {
-                    console.error('Error parsing count data:', error, event.data);
-                }
-            });
-
-            countEventSource.onopen = function() {
-                console.log('Connected to subscriber count stream');
-            };
-
-            countEventSource.onerror = function(error) {
-                console.error('Count stream error:', error);
-                if (countEventSource.readyState === EventSource.CLOSED) {
-                    console.log('Count stream closed, will attempt to reconnect');
-                    countEventSource = null;
-                    // Attempt to reconnect after a delay
-                    setTimeout(connectToCountStream, 2000);
-                }
-            };
-        }
-
-        // Disconnect from subscriber count stream
-        function disconnectFromCountStream() {
-            if (countEventSource) {
-                countEventSource.close();
-                countEventSource = null;
-            }
-        }
-
-        // Initialize subscriber count stream on page load
-        connectToCountStream();
+        // Initialize combined stream on page load
+        connect();
 
         // Clean up on page unload
         window.addEventListener('beforeunload', function() {
             disconnect();
-            disconnectFromCountStream();
         });
 
         function connect() {
@@ -398,14 +619,26 @@
             const container = document.getElementById('news-container');
             container.innerHTML = '<div class="empty-news">Waiting for news updates...</div>';
 
-            eventSource = new EventSource('/news/subscribe');
+            // Use combined stream endpoint - single connection for both news and count
+            eventSource = new EventSource('/news/stream');
             
+            // Handle news events
             eventSource.addEventListener('news', function(event) {
                 try {
                     const news = JSON.parse(event.data);
                     displayNews(news);
                 } catch (error) {
                     console.error('Error parsing news data:', error, event.data);
+                }
+            });
+            
+            // Handle count events from the same stream
+            eventSource.addEventListener('count', function(event) {
+                try {
+                    const count = parseInt(event.data);
+                    updateSubscriberCount(count);
+                } catch (error) {
+                    console.error('Error parsing count data:', error, event.data);
                 }
             });
             
@@ -422,9 +655,8 @@
             eventSource.onopen = function() {
                 document.getElementById('status').textContent = 'Connected';
                 document.getElementById('status').className = 'status connected';
-                document.getElementById('connectBtn').disabled = true;
                 document.getElementById('disconnectBtn').disabled = false;
-                // Count will be updated automatically via SSE stream
+                console.log('Connected to combined news and count stream');
             };
 
             eventSource.onerror = function(error) {
@@ -434,9 +666,10 @@
                 if (eventSource.readyState === EventSource.CLOSED) {
                     document.getElementById('status').textContent = 'Connection Closed';
                     document.getElementById('status').className = 'status disconnected';
-                    document.getElementById('connectBtn').disabled = false;
                     document.getElementById('disconnectBtn').disabled = true;
                     eventSource = null; // Reset for reconnection
+                    // Attempt to reconnect after a delay
+                    setTimeout(connect, 2000);
                 } else if (eventSource.readyState === EventSource.CONNECTING) {
                     document.getElementById('status').textContent = 'Reconnecting...';
                     document.getElementById('status').className = 'status disconnected';
@@ -453,14 +686,15 @@
                 
                 // Clear old news from UI
                 const container = document.getElementById('news-container');
-                container.innerHTML = '<div class="empty-news">Disconnected. Connect to see news updates.</div>';
+                container.innerHTML = '<div class="empty-news">Disconnected. Refresh the page to reconnect.</div>';
+                
+                // Set subscriber count to 0 in UI
+                updateSubscriberCount(0);
                 
                 document.getElementById('status').textContent = 'Disconnected';
                 document.getElementById('status').className = 'status disconnected';
-                document.getElementById('connectBtn').disabled = false;
                 document.getElementById('disconnectBtn').disabled = true;
                 
-                // Count will be updated automatically via SSE stream when subscriber disconnects
             }
         }
 
@@ -521,12 +755,21 @@
             .then(data => {
                 console.log('News added:', data);
                 document.getElementById('newsForm').reset();
-                alert('News published successfully!');
+                closeModal(); // Close modal after successful submission
+                // Show a subtle notification (you can replace with a toast notification library)
+                const notification = document.createElement('div');
+                notification.textContent = '✅ News published successfully!';
+                notification.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #28a745; color: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1001; animation: slideIn 0.3s ease;';
+                document.body.appendChild(notification);
+                setTimeout(() => {
+                    notification.style.animation = 'fadeOut 0.3s ease';
+                    setTimeout(() => notification.remove(), 300);
+                }, 3000);
                 // Count will be updated automatically via SSE stream
             })
             .catch(error => {
                 console.error('Error adding news:', error);
-                alert('Error publishing news');
+                alert('Error publishing news. Please try again.');
             });
         }
 
